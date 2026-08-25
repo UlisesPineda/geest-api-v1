@@ -1,30 +1,23 @@
-import { PrismaService } from '../prisma/prisma.service';
+import { Injectable, NotFoundException } from '@nestjs/common';
+
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { TasksRepository } from './tasks.repository';
 
 @Injectable()
 export class TasksService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly tasksRepository: TasksRepository) {}
 
   create(createTaskDto: CreateTaskDto) {
-    return this.prisma.task.create({
-      data: createTaskDto,
-    });
+    return this.tasksRepository.create(createTaskDto);
   }
 
   findAll() {
-    return this.prisma.task.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    return this.tasksRepository.findAll();
   }
 
   async findOne(id: string) {
-    const task = await this.prisma.task.findUnique({
-      where: { id },
-    });
+    const task = await this.tasksRepository.findOne(id);
 
     if (!task) {
       throw new NotFoundException(`Task with id ${id} not found`);
@@ -36,17 +29,12 @@ export class TasksService {
   async update(id: string, updateTaskDto: UpdateTaskDto) {
     await this.findOne(id);
 
-    return this.prisma.task.update({
-      where: { id },
-      data: updateTaskDto,
-    });
+    return this.tasksRepository.update(id, updateTaskDto);
   }
 
   async remove(id: string) {
     await this.findOne(id);
 
-    return this.prisma.task.delete({
-      where: { id },
-    });
+    return this.tasksRepository.remove(id);
   }
 }
