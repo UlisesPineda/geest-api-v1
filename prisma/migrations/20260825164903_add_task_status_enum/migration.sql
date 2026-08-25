@@ -1,5 +1,0 @@
--- CreateEnum
-CREATE TYPE "TaskStatus" AS ENUM ('PENDING', 'IN_PROGRESS', 'COMPLETED');
-
--- AlterTable
-ALTER TABLE "Task" ALTER COLUMN "status" SET DEFAULT 'PENDING';

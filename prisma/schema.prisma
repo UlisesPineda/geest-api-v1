@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -13,15 +8,72 @@ datasource db {
 }
 
 enum TaskStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
+  open
+  archived
 }
+
+model User {
+  id          String           @id @default(uuid())
+  name        String
+  lastName    String
+  email       String           @unique
+  assignments TaskAssignment[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
 model Task {
-  id          String   @id @default(uuid())
-  title       String
-  description String?
-  status      String   @default("PENDING")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String                @id @default(uuid())
+  title         String
+  description   String?
+  status        TaskStatus            @default(open)
+  archivedAt    DateTime?
+  assignments   TaskAssignment[]
+  notifications NotificationAttempt[]
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+}
+
+model TaskAssignment {
+  id          String    @id @default(uuid())
+  taskId      String
+  userId      String
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
+  @@index([userId])
+  @@index([taskId])
+}
+
+model NotificationAttempt {
+  id         String   @id @default(uuid())
+  taskId     String
+  attempt    Int
+  statusCode Int?
+  createdAt  DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, attempt])
+  @@index([taskId])
+}
+
+model IdempotencyRecord {
+  id           String   @id @default(uuid())
+  key          String
+  endpoint     String
+  requestHash  String
+  statusCode   Int?
+  responseBody Json?
+  completed    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([key, endpoint])
 }
