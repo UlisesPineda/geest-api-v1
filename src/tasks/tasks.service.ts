@@ -36,12 +36,6 @@ export class TasksService {
     return task;
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
-
-    return this.tasksRepository.remove(id);
-  }
-
   async assign(id: string, assignTaskDto: AssignTaskDto) {
     await this.findOne(id);
 

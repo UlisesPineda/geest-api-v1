@@ -68,4 +68,18 @@ export class UsersRepository {
       },
     });
   }
+
+  findTasksByUserId(userId: string) {
+    return this.prisma.taskAssignment.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        task: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
 }

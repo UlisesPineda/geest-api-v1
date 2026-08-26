@@ -62,12 +62,6 @@ export class TasksRepository {
     });
   }
 
-  remove(id: string) {
-    return this.prisma.task.delete({
-      where: { id },
-    });
-  }
-
   assignUsers(taskId: string, userIds: string[]) {
     return this.prisma.taskAssignment.createMany({
       data: userIds.map((userId) => ({
