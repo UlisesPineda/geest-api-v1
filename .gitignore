@@ -1,1 +1,16 @@
-node_modules
+node_modules/
+.env
+/src/generated/prisma/
+dist/
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Logs
+*.log
+
+# AI tool generated skills
+.claude/
+.windsurf/
+.agents/
+skills-lock.json
