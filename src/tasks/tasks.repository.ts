@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
-import { UpdateTaskDto } from './dto/update-task.dto';
+import { TaskStatus } from '../generated/prisma/enums';
 
 @Injectable()
 export class TasksRepository {
@@ -11,8 +11,16 @@ export class TasksRepository {
     return this.prisma.task.create({ data });
   }
 
-  findAll() {
+  findAll(status?: TaskStatus) {
     return this.prisma.task.findMany({
+      where: status ? { status } : undefined,
+      include: {
+        assignments: {
+          include: {
+            user: true,
+          },
+        },
+      },
       orderBy: {
         createdAt: 'desc',
       },
@@ -22,13 +30,13 @@ export class TasksRepository {
   findOne(id: string) {
     return this.prisma.task.findUnique({
       where: { id },
-    });
-  }
-
-  update(id: string, data: UpdateTaskDto) {
-    return this.prisma.task.update({
-      where: { id },
-      data,
+      include: {
+        assignments: {
+          include: {
+            user: true,
+          },
+        },
+      },
     });
   }
 

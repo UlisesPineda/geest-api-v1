@@ -15,6 +15,19 @@ export class UsersRepository {
 
   findAll() {
     return this.prisma.user.findMany({
+      include: {
+        assignments: {
+          where: {
+            completed: false,
+            task: {
+              status: 'open',
+            },
+          },
+          include: {
+            task: true,
+          },
+        },
+      },
       orderBy: {
         createdAt: 'desc',
       },

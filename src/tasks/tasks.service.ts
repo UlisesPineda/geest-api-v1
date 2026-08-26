@@ -1,13 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { CreateTaskDto } from './dto/create-task.dto';
-import { UpdateTaskDto } from './dto/update-task.dto';
 import { TasksRepository } from './tasks.repository';
 import { UsersService } from '../users/users.service';
 import { BadRequestException } from '@nestjs/common';
 import { AssignTaskDto } from './dto/assign-task.dto';
 import { CompleteTaskDto } from './dto/complete-task.dto';
 import { NotificationsService } from '../notifications/notifications.service';
+import { TaskStatus } from '../generated/prisma/enums';
 
 @Injectable()
 export class TasksService {
@@ -21,8 +21,8 @@ export class TasksService {
     return this.tasksRepository.create(createTaskDto);
   }
 
-  findAll() {
-    return this.tasksRepository.findAll();
+  findAll(status?: TaskStatus) {
+    return this.tasksRepository.findAll(status);
   }
 
   async findOne(id: string) {
@@ -33,12 +33,6 @@ export class TasksService {
     }
 
     return task;
-  }
-
-  async update(id: string, updateTaskDto: UpdateTaskDto) {
-    await this.findOne(id);
-
-    return this.tasksRepository.update(id, updateTaskDto);
   }
 
   async remove(id: string) {

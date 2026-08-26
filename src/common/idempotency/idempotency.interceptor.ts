@@ -48,9 +48,6 @@ export class IdempotencyInterceptor implements NestInterceptor {
             response.status(record.statusCode ?? 200);
             return of(record.responseBody);
           }
-          // throw new ConflictException(
-          //   'Request with this Idempotency-Key is already in progress',
-          // );
           return from(
             this.idempotencyService.waitForCompletion(key, endpoint),
           ).pipe(
