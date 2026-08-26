@@ -12,8 +12,7 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { ParseUUIDPipe } from '@nestjs/common';
 import { AssignTaskDto } from './dto/assign-task.dto';
 import { CompleteTaskDto } from './dto/complete-task.dto';
-import { ParseEnumPipe } from '@nestjs/common';
-import { TaskStatus } from '../generated/prisma/enums';
+import { TasksQueryDto } from './dto/tasks-query.dto';
 
 @Controller('tasks')
 export class TasksController {
@@ -25,11 +24,8 @@ export class TasksController {
   }
 
   @Get()
-  findAll(
-    @Query('status', new ParseEnumPipe(TaskStatus, { optional: true }))
-    status?: TaskStatus,
-  ) {
-    return this.tasksService.findAll(status);
+  findAll(@Query() query: TasksQueryDto) {
+    return this.tasksService.findAll(query.status, query);
   }
 
   @Get(':id')

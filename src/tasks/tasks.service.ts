@@ -8,6 +8,7 @@ import { AssignTaskDto } from './dto/assign-task.dto';
 import { CompleteTaskDto } from './dto/complete-task.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { TaskStatus } from '../generated/prisma/enums';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Injectable()
 export class TasksService {
@@ -21,8 +22,8 @@ export class TasksService {
     return this.tasksRepository.create(createTaskDto);
   }
 
-  findAll(status?: TaskStatus) {
-    return this.tasksRepository.findAll(status);
+  findAll(status?: TaskStatus, pagination?: PaginationDto) {
+    return this.tasksRepository.findAll(status, pagination);
   }
 
   async findOne(id: string) {

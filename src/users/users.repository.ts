@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Injectable()
 export class UsersRepository {
@@ -13,25 +14,43 @@ export class UsersRepository {
     });
   }
 
-  findAll() {
-    return this.prisma.user.findMany({
-      include: {
-        assignments: {
-          where: {
-            completed: false,
-            task: {
-              status: 'open',
+  async findAll(pagination: PaginationDto = new PaginationDto()) {
+    const { page, limit } = pagination;
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.user.findMany({
+        include: {
+          assignments: {
+            where: {
+              completed: false,
+              task: {
+                status: 'open',
+              },
+            },
+            include: {
+              task: true,
             },
           },
-          include: {
-            task: true,
-          },
         },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.user.count(),
+    ]);
+
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    };
   }
 
   findOne(id: string) {
