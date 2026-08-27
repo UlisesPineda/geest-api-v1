@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: geest_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: geest_user
+      POSTGRES_PASSWORD: geest_pass
+      POSTGRES_DB: geest_api
+    ports:
+      - "5433:5432"
+    volumes:
+      - geest_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  geest_postgres_data:

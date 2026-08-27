@@ -1,0 +1,416 @@
+{
+  "info": {
+    "_postman_id": "3d1c394b-7699-4219-bdbe-b9d8294e77f1",
+    "name": "GEEST API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "39523951"
+  },
+  "item": [
+    {
+      "name": "Create Task",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Idempotency-Key",
+            "value": "prod-task-001",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"title\": \"Validar despliegue en producción\",\r\n  \"description\": \"Smoke test de la API desplegada en Railway\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{GEEST_URL_PRODUCTION}}tasks",
+          "host": [
+            "{{GEEST_URL_PRODUCTION}}tasks"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get All Tasks",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{GEEST_URL}}tasks",
+          "host": [
+            "{{GEEST_URL}}tasks"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Task by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{GEEST_URL_PRODUCTION}}tasks/c7a3bfbc-f979-474e-868a-408f094b7863",
+          "host": [
+            "{{GEEST_URL_PRODUCTION}}tasks"
+          ],
+          "path": [
+            "c7a3bfbc-f979-474e-868a-408f094b7863"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Task",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"status\": \"DONE\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{GEEST_URL}}tasks/70441269-d901-4e74-aca6-6f9c9f413576",
+          "host": [
+            "{{GEEST_URL}}tasks"
+          ],
+          "path": [
+            "70441269-d901-4e74-aca6-6f9c9f413576"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Task",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{GEEST_URL}}tasks/00000000-0000-0000-0000-000000000000",
+          "host": [
+            "{{GEEST_URL}}tasks"
+          ],
+          "path": [
+            "00000000-0000-0000-0000-000000000000"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Idempotency-Key",
+            "value": "prod-user-ana-001",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Ana\",\r\n  \"lastName\": \"García\",\r\n  \"email\": \"ana.prod@example.com\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{GEEST_URL_PRODUCTION}}users",
+          "host": [
+            "{{GEEST_URL_PRODUCTION}}users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Asign Tasks",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Idempotency-Key",
+            "value": "prod-assign-001",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"userIds\": [\r\n    \"5f9e9c6a-1dda-40ad-a730-657000d0ca4e\"\r\n  ]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{GEEST_URL_PRODUCTION}}tasks/c7a3bfbc-f979-474e-868a-408f094b7863/assign",
+          "host": [
+            "{{GEEST_URL_PRODUCTION}}tasks"
+          ],
+          "path": [
+            "c7a3bfbc-f979-474e-868a-408f094b7863",
+            "assign"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Terminate Task",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Idempotency-Key",
+            "value": "prod-complete-001",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"userId\": \"5f9e9c6a-1dda-40ad-a730-657000d0ca4e\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{GEEST_URL_PRODUCTION}}tasks/c7a3bfbc-f979-474e-868a-408f094b7863/complete",
+          "host": [
+            "{{GEEST_URL_PRODUCTION}}tasks"
+          ],
+          "path": [
+            "c7a3bfbc-f979-474e-868a-408f094b7863",
+            "complete"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Last Notifications Attempts",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{GEEST_URL_PRODUCTION}}tasks/c7a3bfbc-f979-474e-868a-408f094b7863/notifications",
+          "host": [
+            "{{GEEST_URL_PRODUCTION}}tasks"
+          ],
+          "path": [
+            "c7a3bfbc-f979-474e-868a-408f094b7863",
+            "notifications"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Active Taks",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{GEEST_URL}}tasks?status=invalid",
+          "host": [
+            "{{GEEST_URL}}tasks"
+          ],
+          "query": [
+            {
+              "key": "status",
+              "value": "invalid"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Task By ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{GEEST_URL}}tasks/c03abca2-f280-4869-9a0e-27f217fca67c",
+          "host": [
+            "{{GEEST_URL}}tasks"
+          ],
+          "path": [
+            "c03abca2-f280-4869-9a0e-27f217fca67c"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get All Users",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Carlos\",\r\n  \"lastName\": \"López\",\r\n  \"email\": \"correo-invalido\"\r\n}"
+        },
+        "url": {
+          "raw": "{{GEEST_URL_PRODUCTION}}users",
+          "host": [
+            "{{GEEST_URL_PRODUCTION}}users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get All Tasks",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{GEEST_URL}}tasks",
+          "host": [
+            "{{GEEST_URL}}tasks"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Tasks Paginated",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{GEEST_URL}}tasks?page=2&limit=2",
+          "host": [
+            "{{GEEST_URL}}tasks"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "2"
+            },
+            {
+              "key": "limit",
+              "value": "2"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Pagination & Filter Tasks",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{GEEST_URL}}tasks?status=archived&page=1&limit=2",
+          "host": [
+            "{{GEEST_URL}}tasks"
+          ],
+          "query": [
+            {
+              "key": "status",
+              "value": "archived"
+            },
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "2"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Simulate Task Pagination Error",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{GEEST_URL}}tasks?page=1&limit=101",
+          "host": [
+            "{{GEEST_URL}}tasks"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "101"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Users Paginated",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{GEEST_URL_PRODUCTION}}users?page=2&limit=3",
+          "host": [
+            "{{GEEST_URL_PRODUCTION}}users"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "2"
+            },
+            {
+              "key": "limit",
+              "value": "3"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get User Related Tasks",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{GEEST_URL_PRODUCTION}}users/6b2e577e-9820-440c-a6e0-d38208bb2468/tasks",
+          "host": [
+            "{{GEEST_URL_PRODUCTION}}users"
+          ],
+          "path": [
+            "6b2e577e-9820-440c-a6e0-d38208bb2468",
+            "tasks"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

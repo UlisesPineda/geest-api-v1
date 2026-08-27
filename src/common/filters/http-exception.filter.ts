@@ -7,34 +7,54 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 
-@Catch(HttpException)
+interface ErrorResponse {
+  error: {
+    code: string;
+    message: string;
+  };
+}
+
+@Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
-  catch(exception: HttpException, host: ArgumentsHost) {
-    const context = host.switchToHttp();
-    const response = context.getResponse<Response>();
+  catch(exception: unknown, host: ArgumentsHost): void {
+    const response = host.switchToHttp().getResponse<Response>();
 
-    const status = exception.getStatus();
-    const exceptionResponse = exception.getResponse();
+    if (exception instanceof HttpException) {
+      const status = exception.getStatus();
+      const exceptionResponse = exception.getResponse();
 
-    let message = exception.message;
+      let message = exception.message;
 
-    if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
-      const responseBody = exceptionResponse as {
-        message?: string | string[];
+      if (
+        typeof exceptionResponse === 'object' &&
+        exceptionResponse !== null &&
+        'message' in exceptionResponse
+      ) {
+        const responseMessage = exceptionResponse.message;
+
+        message = Array.isArray(responseMessage)
+          ? responseMessage.join(', ')
+          : String(responseMessage);
+      }
+
+      const body: ErrorResponse = {
+        error: {
+          code: HttpStatus[status] ?? 'HTTP_ERROR',
+          message,
+        },
       };
 
-      if (Array.isArray(responseBody.message)) {
-        message = responseBody.message.join(', ');
-      } else if (responseBody.message) {
-        message = responseBody.message;
-      }
+      response.status(status).json(body);
+      return;
     }
 
-    response.status(status).json({
+    const body: ErrorResponse = {
       error: {
-        code: HttpStatus[status] ?? 'HTTP_ERROR',
-        message,
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Internal server error',
       },
-    });
+    };
+
+    response.status(HttpStatus.INTERNAL_SERVER_ERROR).json(body);
   }
 }

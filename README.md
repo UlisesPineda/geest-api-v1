@@ -1,98 +1,196 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Geest API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST para gestión de tareas con asignación multiusuario, idempotencia y archivado transaccional, construida con **Node.js**, **TypeScript**, **NestJS 11**, **PostgreSQL** y **Prisma 7**.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Permite crear usuarios y tareas, asignar múltiples usuarios a una misma tarea, completar participaciones individuales y archivar automáticamente la tarea cuando todos sus participantes terminan.
 
-## Description
+**Producción:** [`geest-api-v1-production.up.railway.app`](https://geest-api-v1-production.up.railway.app)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+## Tabla de contenidos
 
-```bash
-$ npm install
-```
+- [Stack](#stack)
+- [Ejecución local](#ejecución-local)
+- [Arquitectura y decisiones técnicas](#arquitectura-y-decisiones-técnicas)
+- [Idempotencia](#idempotencia)
+- [Archivado y notificaciones](#archivado-y-notificaciones)
+- [Manejo de errores](#manejo-de-errores)
+- [Mejora adicional: paginación](#mejora-adicional-paginación)
+- [Supuestos y alcance](#supuestos-y-alcance)
+- [Documentación](#documentación)
+- [Deploy](#deploy)
 
-## Compile and run the project
+---
 
-```bash
-# development
-$ npm run start
+## Stack
 
-# watch mode
-$ npm run start:dev
+| Capa | Tecnología |
+|---|---|
+| Runtime | Node.js 22+ |
+| Lenguaje | TypeScript |
+| Framework | NestJS 11 |
+| Base de datos | PostgreSQL 16 |
+| ORM | Prisma 7 |
+| Infraestructura local | Docker |
+| Deploy | Railway |
 
-# production mode
-$ npm run start:prod
-```
+---
 
-## Run tests
+## Ejecución local
 
-```bash
-# unit tests
-$ npm run test
+### Requisitos
 
-# e2e tests
-$ npm run test:e2e
+- Node.js 22+
+- npm
+- Docker
 
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### 1. Instalar dependencias
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 2. Configurar variables de entorno
 
-## Resources
+```bash
+cp .env.example .env
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+En PowerShell:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```powershell
+Copy-Item .env.example .env
+```
 
-## Support
+### 3. Levantar PostgreSQL
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
+docker compose up -d
+```
 
-## Stay in touch
+### 4. Aplicar el esquema versionado
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+npx prisma migrate deploy
+```
 
-## License
+### 5. Iniciar la API
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```bash
+npm run start:dev
+```
+
+La API queda disponible en `http://localhost:3000`.
+
+### 6. Validación
+
+```bash
+npm run lint
+npm run build
+npm test
+```
+
+La suite incluye **17 tests automatizados** distribuidos en **7 suites**, cubriendo reglas de tareas y usuarios, idempotencia, formato de errores y reintentos de notificaciones.
+
+---
+
+## Arquitectura y decisiones técnicas
+
+La aplicación sigue una separación estricta de capas:
+
+```
+Controller → Service → Repository → Prisma → PostgreSQL
+```
+
+PostgreSQL es la fuente de verdad para usuarios, tareas, asignaciones, idempotencia e intentos de notificación. El esquema está versionado mediante migraciones de Prisma.
+
+La relación entre usuarios y tareas es **N:M** a través de la entidad `TaskAssignment`, que almacena de forma independiente `completed` y `completedAt` por cada participación.
+
+El completado y el archivado se ejecutan de forma **transaccional**: cuando todos los participantes de una tarea terminan, esta pasa de `open` a `archived` una única vez, sin condiciones de carrera en escenarios concurrentes.
+
+---
+
+## Idempotencia
+
+Todos los endpoints `POST` requieren el header `Idempotency-Key`.
+
+- La clave, junto con un hash SHA-256 del payload, se persiste en PostgreSQL.
+- Esto evita que requests duplicados o concurrentes ejecuten nuevamente una misma operación.
+
+Se decidió exigir la clave como supuesto de diseño porque las operaciones modifican el estado del sistema, y la prevención de duplicados es un requisito crítico del dominio.
+
+---
+
+## Archivado y notificaciones
+
+Al archivar una tarea, la API realiza un `POST` a `NOTIFY_URL`.
+
+- Ante errores `5xx` o ausencia de respuesta, se ejecutan hasta **3 intentos** con esperas crecientes (backoff).
+- Cada intento queda registrado en PostgreSQL.
+
+Para desarrollo y demostración se utiliza `https://httpbin.org/post` únicamente como receptor HTTP de prueba.
+
+---
+
+## Manejo de errores
+
+Todos los errores expuestos por la API siguen un formato consistente:
+
+```json
+{
+  "error": {
+    "code": "...",
+    "message": "..."
+  }
+}
+```
+
+---
+
+## Mejora adicional: paginación
+
+`GET /users` y `GET /tasks` soportan `page` y `limit`, con un máximo de **100 registros** por consulta. `GET /tasks` conserva además el filtro requerido `status=open|archived`.
+
+La paginación evita listados sin límite conforme crecen usuarios y tareas, reduciendo transferencia de datos, memoria y carga sobre PostgreSQL. Se eligió sobre otras mejoras posibles porque aporta escalabilidad directamente a las colecciones principales, sin modificar las reglas de negocio solicitadas.
+
+---
+
+## Supuestos y alcance
+
+- `Idempotency-Key` es obligatorio en operaciones `POST`.
+- Una relación usuario-tarea no puede duplicarse.
+- Solo usuarios asignados pueden completar una tarea.
+- Una tarea se archiva únicamente cuando todos sus participantes terminan.
+- `NOTIFY_URL` representa un sistema externo y configurable.
+- No se recortó ninguna funcionalidad obligatoria por restricciones de tiempo.
+
+---
+
+## Documentación
+
+- **Modelo de base de datos, tipos y relaciones:** [`UML.md`](./UML.md)
+- **Endpoints, bodies, headers y casos de prueba:** [`POSTMAN.md`](./POSTMAN.md)
+- **Colección Postman:** [`postman/`](./postman/)
+
+---
+
+## Deploy
+
+La API y PostgreSQL están desplegados en **Railway**, elegido porque permite desplegar aplicación y base de datos en el mismo proyecto, administrar variables de entorno y mantener una URL pública accesible durante la ventana de evaluación.
+
+**URL pública:** [`geest-api-v1-production.up.railway.app`](https://geest-api-v1-production.up.railway.app)
+
+Durante la instalación, `postinstall` ejecuta:
+
+```bash
+prisma generate
+```
+
+El proceso de producción aplica las migraciones versionadas antes de iniciar la API:
+
+```bash
+prisma migrate deploy && node dist/main
+```
+
+El repositorio incluye `docker-compose.yml` para reproducir PostgreSQL 16 localmente y una colección Postman con ejemplos del flujo completo.
