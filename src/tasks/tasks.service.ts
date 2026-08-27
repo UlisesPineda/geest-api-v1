@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { CreateTaskDto } from './dto/create-task.dto';
 import { TasksRepository } from './tasks.repository';
@@ -37,8 +41,13 @@ export class TasksService {
   }
 
   async assign(id: string, assignTaskDto: AssignTaskDto) {
-    await this.findOne(id);
+    const task = await this.findOne(id);
 
+    if (task.status === 'archived') {
+      throw new ConflictException(
+        'Archived tasks cannot receive new assignments',
+      );
+    }
     const uniqueUserIds = [...new Set(assignTaskDto.userIds)];
     const users = await this.usersService.findByIds(uniqueUserIds);
 

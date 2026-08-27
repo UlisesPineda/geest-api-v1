@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { TaskStatus } from '../generated/prisma/enums';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { Prisma } from '../generated/prisma/client';
 
 @Injectable()
 export class TasksRepository {
@@ -129,16 +130,31 @@ export class TasksRepository {
     });
   }
 
-  runInTransaction<T>(
+  async runInTransaction<T>(
     callback: (
       tx: Parameters<Parameters<PrismaService['$transaction']>[0]>[0],
     ) => Promise<T>,
   ) {
-    return this.prisma.$transaction(callback, {
-      isolationLevel: 'Serializable',
-    });
-  }
+    const maxRetries = 3;
 
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await this.prisma.$transaction(callback, {
+          isolationLevel: 'Serializable',
+        });
+      } catch (error) {
+        const isRetryable =
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2034';
+
+        if (!isRetryable || attempt === maxRetries) {
+          throw error;
+        }
+      }
+    }
+
+    throw new Error('Transaction retry limit reached');
+  }
   async completeAssignmentTransaction(taskId: string, assignmentId: string) {
     return this.runInTransaction(async (tx) => {
       const assignment = await tx.taskAssignment.findUnique({

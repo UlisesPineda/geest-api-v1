@@ -40,7 +40,7 @@ export class NotificationsService {
     for (let attempt = 1; attempt <= this.maxAttempts; attempt++) {
       try {
         const response = await firstValueFrom(
-          this.httpService.post(notifyUrl, payload),
+          this.httpService.post(notifyUrl, payload, { timeout: 5000 }),
         );
 
         await this.notificationsRepository.createAttempt(

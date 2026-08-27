@@ -1,5 +1,10 @@
-import { CallHandler, ExecutionContext } from '@nestjs/common';
-import { firstValueFrom, of } from 'rxjs';
+import {
+  BadRequestException,
+  CallHandler,
+  ExecutionContext,
+} from '@nestjs/common';
+
+import { firstValueFrom, of, throwError } from 'rxjs';
 
 import { IdempotencyInterceptor } from './idempotency.interceptor';
 import { IdempotencyService } from './idempotency.service';
@@ -129,5 +134,131 @@ describe('IdempotencyInterceptor', () => {
     expect(response.status).toHaveBeenCalledWith(201);
     expect(handleMock).not.toHaveBeenCalled();
     expect(idempotencyServiceMock.complete).not.toHaveBeenCalled();
+  });
+
+  it('should replay a stored error response without executing the handler again', async () => {
+    const request = {
+      method: 'POST',
+      path: '/users',
+      body: {
+        name: 'Ana',
+        lastName: 'García',
+        email: 'invalid-email',
+      },
+      header: jest.fn().mockReturnValue('invalid-user-001'),
+    };
+
+    const response = {
+      statusCode: 201,
+      status: jest.fn().mockReturnThis(),
+    };
+
+    const context = {
+      switchToHttp: () => ({
+        getRequest: () => request,
+        getResponse: () => response,
+      }),
+    } as unknown as ExecutionContext;
+
+    const handleMock = jest.fn();
+
+    const next = {
+      handle: handleMock,
+    };
+
+    idempotencyServiceMock.createRequestHash.mockReturnValue('same-hash');
+
+    idempotencyServiceMock.reserve.mockResolvedValue({
+      created: false,
+      record: {
+        id: 'record-id',
+        requestHash: 'same-hash',
+        completed: true,
+        statusCode: 400,
+        responseBody: {
+          error: {
+            code: 'BAD_REQUEST',
+            message: 'email must be an email',
+          },
+        },
+      },
+    });
+
+    const result = await firstValueFrom(
+      interceptor.intercept(context, next as CallHandler),
+    );
+
+    expect(response.status).toHaveBeenCalledWith(400);
+
+    expect(result).toEqual({
+      error: {
+        code: 'BAD_REQUEST',
+        message: 'email must be an email',
+      },
+    });
+
+    expect(handleMock).not.toHaveBeenCalled();
+    expect(idempotencyServiceMock.complete).not.toHaveBeenCalled();
+  });
+
+  it('should persist an HttpException response when the first request fails', async () => {
+    const request = {
+      method: 'POST',
+      path: '/users',
+      body: {
+        name: 'Ana',
+        lastName: 'García',
+        email: 'invalid-email',
+      },
+      header: jest.fn().mockReturnValue('invalid-user-001'),
+    };
+
+    const response = {
+      statusCode: 201,
+      status: jest.fn().mockReturnThis(),
+    };
+
+    const context = {
+      switchToHttp: () => ({
+        getRequest: () => request,
+        getResponse: () => response,
+      }),
+    } as unknown as ExecutionContext;
+
+    const exception = new BadRequestException('email must be an email');
+
+    const handleMock = jest.fn(() => throwError(() => exception));
+
+    const next = {
+      handle: handleMock,
+    };
+
+    idempotencyServiceMock.createRequestHash.mockReturnValue('same-hash');
+
+    idempotencyServiceMock.reserve.mockResolvedValue({
+      created: true,
+      record: {
+        id: 'record-id',
+        requestHash: 'same-hash',
+        completed: false,
+      },
+    });
+
+    idempotencyServiceMock.complete.mockResolvedValue(undefined);
+
+    await expect(
+      firstValueFrom(interceptor.intercept(context, next as CallHandler)),
+    ).rejects.toThrow('email must be an email');
+
+    expect(idempotencyServiceMock.complete).toHaveBeenCalledWith(
+      'record-id',
+      400,
+      {
+        error: {
+          code: 'BAD_REQUEST',
+          message: 'email must be an email',
+        },
+      },
+    );
   });
 });

@@ -2,11 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 
 import { UsersRepository } from './users.repository';
 import { UsersService } from './users.service';
+import { Prisma } from '../generated/prisma/client';
 
 describe('UsersService', () => {
   let service: UsersService;
 
   const usersRepositoryMock = {
+    create: jest.fn(),
     findOne: jest.fn(),
     findTasksByUserId: jest.fn(),
   };
@@ -74,5 +76,29 @@ describe('UsersService', () => {
     );
 
     expect(usersRepositoryMock.findTasksByUserId).not.toHaveBeenCalled();
+  });
+
+  it('should throw ConflictException when creating a user with a duplicated email', async () => {
+    const createUserDto = {
+      name: 'Ana',
+      lastName: 'García',
+      email: 'ana@example.com',
+    };
+
+    const prismaError = new Prisma.PrismaClientKnownRequestError(
+      'Unique constraint failed',
+      {
+        code: 'P2002',
+        clientVersion: '7.10.0',
+      },
+    );
+
+    usersRepositoryMock.create.mockRejectedValue(prismaError);
+
+    await expect(service.create(createUserDto)).rejects.toThrow(
+      'User with email ana@example.com already exists',
+    );
+
+    expect(usersRepositoryMock.create).toHaveBeenCalledWith(createUserDto);
   });
 });

@@ -1,17 +1,35 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UsersRepository } from './users.repository';
 import { PaginationDto } from '../common/dto/pagination.dto';
 
+import { Prisma } from '../generated/prisma/client';
+
 @Injectable()
 export class UsersService {
   constructor(private readonly usersRepository: UsersRepository) {}
 
-  create(createUserDto: CreateUserDto) {
-    return this.usersRepository.create(createUserDto);
-  }
+  async create(createUserDto: CreateUserDto) {
+    try {
+      return await this.usersRepository.create(createUserDto);
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          `User with email ${createUserDto.email} already exists`,
+        );
+      }
 
+      throw error;
+    }
+  }
   findAll(pagination?: PaginationDto) {
     return this.usersRepository.findAll(pagination);
   }

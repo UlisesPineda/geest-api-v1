@@ -52,8 +52,10 @@ describe('NotificationsService', () => {
         title: 'Test task',
         archivedAt: archivedAt.toISOString(),
       },
+      {
+        timeout: 5000,
+      },
     );
-
     expect(notificationsRepositoryMock.createAttempt).toHaveBeenCalledWith(
       'task-id',
       1,

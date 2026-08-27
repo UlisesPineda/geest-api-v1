@@ -13,6 +13,8 @@ describe('TasksService', () => {
     findOne: jest.fn(),
     findAssignment: jest.fn(),
     completeAssignmentTransaction: jest.fn(),
+    assignUsers: jest.fn(),
+    findAssignmentsByTaskAndUsers: jest.fn(),
   };
   const usersServiceMock = {
     findByIds: jest.fn(),
@@ -253,5 +255,27 @@ describe('TasksService', () => {
         notificationTriggered: false,
       },
     });
+  });
+
+  it('should reject assigning users to an archived task', async () => {
+    const taskId = 'task-id';
+    const userId = 'user-id';
+
+    tasksRepositoryMock.findOne.mockResolvedValue({
+      id: taskId,
+      title: 'Archived task',
+      description: null,
+      status: 'archived',
+      archivedAt: new Date(),
+    });
+
+    await expect(
+      service.assign(taskId, {
+        userIds: [userId],
+      }),
+    ).rejects.toThrow('Archived tasks cannot receive new assignments');
+
+    expect(usersServiceMock.findByIds).not.toHaveBeenCalled();
+    expect(tasksRepositoryMock.assignUsers).not.toHaveBeenCalled();
   });
 });
