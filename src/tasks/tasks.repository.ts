@@ -72,6 +72,20 @@ export class TasksRepository {
     });
   }
 
+  findAssignmentsByTaskAndUsers(taskId: string, userIds: string[]) {
+    return this.prisma.taskAssignment.findMany({
+      where: {
+        taskId,
+        userId: {
+          in: userIds,
+        },
+      },
+      include: {
+        user: true,
+      },
+    });
+  }
+
   findAssignment(taskId: string, userId: string) {
     return this.prisma.taskAssignment.findUnique({
       where: {
@@ -131,15 +145,21 @@ export class TasksRepository {
         where: { id: assignmentId },
       });
 
-      if (assignment && !assignment.completed) {
-        await tx.taskAssignment.update({
-          where: { id: assignmentId },
-          data: {
-            completed: true,
-            completedAt: new Date(),
-          },
-        });
+      if (!assignment) {
+        throw new Error('Task assignment not found');
       }
+
+      const alreadyCompleted = assignment.completed;
+
+      const completedAssignment = alreadyCompleted
+        ? assignment
+        : await tx.taskAssignment.update({
+            where: { id: assignmentId },
+            data: {
+              completed: true,
+              completedAt: new Date(),
+            },
+          });
 
       const pendingAssignments = await tx.taskAssignment.count({
         where: {
@@ -148,28 +168,39 @@ export class TasksRepository {
         },
       });
 
-      if (pendingAssignments > 0) {
-        return {
-          archived: false,
-        };
+      let archivedNow = false;
+
+      if (pendingAssignments === 0) {
+        const archivedAt = new Date();
+
+        const archiveResult = await tx.task.updateMany({
+          where: {
+            id: taskId,
+            status: 'open',
+          },
+          data: {
+            status: 'archived',
+            archivedAt,
+          },
+        });
+
+        archivedNow = archiveResult.count === 1;
       }
 
-      const archivedAt = new Date();
-
-      const archiveResult = await tx.task.updateMany({
-        where: {
-          id: taskId,
-          status: 'open',
-        },
-        data: {
-          status: 'archived',
-          archivedAt,
-        },
+      const task = await tx.task.findUnique({
+        where: { id: taskId },
       });
 
+      if (!task) {
+        throw new Error('Task not found after completion');
+      }
+
       return {
-        archived: archiveResult.count === 1,
-        archivedAt: archiveResult.count === 1 ? archivedAt : null,
+        completedAt: completedAssignment.completedAt,
+        alreadyCompleted,
+        archivedNow,
+        status: task.status,
+        archivedAt: task.archivedAt,
       };
     });
   }

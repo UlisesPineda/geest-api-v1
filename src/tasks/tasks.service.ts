@@ -46,10 +46,55 @@ export class TasksService {
       throw new BadRequestException('One or more users do not exist');
     }
 
-    await this.tasksRepository.assignUsers(id, uniqueUserIds);
+    const existingAssignments =
+      await this.tasksRepository.findAssignmentsByTaskAndUsers(
+        id,
+        uniqueUserIds,
+      );
+
+    const existingUserIds = new Set(
+      existingAssignments.map((assignment) => assignment.userId),
+    );
+
+    const newUserIds = uniqueUserIds.filter(
+      (userId) => !existingUserIds.has(userId),
+    );
+
+    if (newUserIds.length > 0) {
+      await this.tasksRepository.assignUsers(id, newUserIds);
+    }
+
+    const assignments =
+      await this.tasksRepository.findAssignmentsByTaskAndUsers(
+        id,
+        uniqueUserIds,
+      );
+
+    const newUserIdSet = new Set(newUserIds);
 
     return {
-      message: 'Users assigned successfully',
+      success: true,
+      message: 'Users assignment processed successfully',
+      data: {
+        taskId: id,
+        assigned: assignments
+          .filter((assignment) => newUserIdSet.has(assignment.userId))
+          .map((assignment) => ({
+            user: {
+              id: assignment.user.id,
+              name: assignment.user.name,
+              lastName: assignment.user.lastName,
+              email: assignment.user.email,
+            },
+            assignedAt: assignment.createdAt,
+          })),
+        alreadyAssigned: existingAssignments.map((assignment) => ({
+          id: assignment.user.id,
+          name: assignment.user.name,
+          lastName: assignment.user.lastName,
+          email: assignment.user.email,
+        })),
+      },
     };
   }
 
@@ -61,6 +106,8 @@ export class TasksService {
     if (users.length === 0) {
       throw new BadRequestException('User does not exist');
     }
+
+    const user = users[0];
 
     const assignment = await this.tasksRepository.findAssignment(
       id,
@@ -76,7 +123,7 @@ export class TasksService {
       assignment.id,
     );
 
-    if (result.archived && result.archivedAt) {
+    if (result.archivedNow && result.archivedAt) {
       const task = await this.findOne(id);
 
       await this.notificationsService.sendTaskArchived({
@@ -87,7 +134,29 @@ export class TasksService {
     }
 
     return {
-      message: 'Task participation completed successfully',
+      success: true,
+      message: result.archivedNow
+        ? 'Task participation completed and task archived successfully'
+        : 'Task participation completed successfully',
+      data: {
+        taskId: id,
+        user: {
+          id: user.id,
+          name: user.name,
+          lastName: user.lastName,
+          email: user.email,
+        },
+        participation: {
+          completed: true,
+          completedAt: result.completedAt,
+          alreadyCompleted: result.alreadyCompleted,
+        },
+        task: {
+          status: result.status,
+          archivedAt: result.archivedAt,
+        },
+        notificationTriggered: result.archivedNow,
+      },
     };
   }
 

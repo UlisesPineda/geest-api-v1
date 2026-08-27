@@ -67,6 +67,7 @@ describe('TasksService', () => {
     expect(tasksRepositoryMock.create).toHaveBeenCalledWith(createTaskDto);
     expect(result).toEqual(expectedTask);
   });
+
   it('should throw NotFoundException when task does not exist', async () => {
     tasksRepositoryMock.findOne.mockResolvedValue(null);
 
@@ -76,6 +77,7 @@ describe('TasksService', () => {
 
     expect(tasksRepositoryMock.findOne).toHaveBeenCalledWith('missing-task-id');
   });
+
   it('should reject completion when user is not assigned to the task', async () => {
     const taskId = 'task-id';
     const userId = 'user-id';
@@ -85,7 +87,14 @@ describe('TasksService', () => {
       title: 'Test task',
     });
 
-    usersServiceMock.findByIds.mockResolvedValue([{ id: userId }]);
+    usersServiceMock.findByIds.mockResolvedValue([
+      {
+        id: userId,
+        name: 'Test',
+        lastName: 'User',
+        email: 'test.user@example.com',
+      },
+    ]);
     tasksRepositoryMock.findAssignment.mockResolvedValue(null);
 
     await expect(service.complete(taskId, { userId })).rejects.toThrow(
@@ -97,10 +106,11 @@ describe('TasksService', () => {
     ).not.toHaveBeenCalled();
     expect(notificationsServiceMock.sendTaskArchived).not.toHaveBeenCalled();
   });
+
   it('should notify when completing the assignment archives the task', async () => {
     const taskId = 'task-id';
     const userId = 'user-id';
-    const archivedAt = new Date();
+    const archivedAt = new Date('2026-08-27T17:03:51.110Z');
 
     tasksRepositoryMock.findOne
       .mockResolvedValueOnce({
@@ -115,7 +125,14 @@ describe('TasksService', () => {
         archivedAt,
       });
 
-    usersServiceMock.findByIds.mockResolvedValue([{ id: userId }]);
+    usersServiceMock.findByIds.mockResolvedValue([
+      {
+        id: userId,
+        name: 'Test',
+        lastName: 'User',
+        email: 'test.user@example.com',
+      },
+    ]);
 
     tasksRepositoryMock.findAssignment.mockResolvedValue({
       id: 'assignment-id',
@@ -125,7 +142,10 @@ describe('TasksService', () => {
     });
 
     tasksRepositoryMock.completeAssignmentTransaction.mockResolvedValue({
-      archived: true,
+      completedAt: archivedAt,
+      alreadyCompleted: false,
+      archivedNow: true,
+      status: 'archived',
       archivedAt,
     });
 
@@ -144,12 +164,34 @@ describe('TasksService', () => {
     });
 
     expect(result).toEqual({
-      message: 'Task participation completed successfully',
+      success: true,
+      message: 'Task participation completed and task archived successfully',
+      data: {
+        taskId,
+        user: {
+          id: userId,
+          name: 'Test',
+          lastName: 'User',
+          email: 'test.user@example.com',
+        },
+        participation: {
+          completed: true,
+          completedAt: archivedAt,
+          alreadyCompleted: false,
+        },
+        task: {
+          status: 'archived',
+          archivedAt,
+        },
+        notificationTriggered: true,
+      },
     });
   });
+
   it('should not notify when the task is not archived yet', async () => {
     const taskId = 'task-id';
     const userId = 'user-id';
+    const completedAt = new Date('2026-08-27T17:03:51.110Z');
 
     tasksRepositoryMock.findOne.mockResolvedValue({
       id: taskId,
@@ -157,8 +199,14 @@ describe('TasksService', () => {
       status: 'open',
     });
 
-    usersServiceMock.findByIds.mockResolvedValue([{ id: userId }]);
-
+    usersServiceMock.findByIds.mockResolvedValue([
+      {
+        id: userId,
+        name: 'Test',
+        lastName: 'User',
+        email: 'test.user@example.com',
+      },
+    ]);
     tasksRepositoryMock.findAssignment.mockResolvedValue({
       id: 'assignment-id',
       taskId,
@@ -167,7 +215,10 @@ describe('TasksService', () => {
     });
 
     tasksRepositoryMock.completeAssignmentTransaction.mockResolvedValue({
-      archived: false,
+      completedAt,
+      alreadyCompleted: false,
+      archivedNow: false,
+      status: 'open',
       archivedAt: null,
     });
 
@@ -180,7 +231,27 @@ describe('TasksService', () => {
     expect(notificationsServiceMock.sendTaskArchived).not.toHaveBeenCalled();
 
     expect(result).toEqual({
+      success: true,
       message: 'Task participation completed successfully',
+      data: {
+        taskId,
+        user: {
+          id: userId,
+          name: 'Test',
+          lastName: 'User',
+          email: 'test.user@example.com',
+        },
+        participation: {
+          completed: true,
+          completedAt,
+          alreadyCompleted: false,
+        },
+        task: {
+          status: 'open',
+          archivedAt: null,
+        },
+        notificationTriggered: false,
+      },
     });
   });
 });
